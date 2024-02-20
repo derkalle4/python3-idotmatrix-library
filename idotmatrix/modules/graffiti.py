@@ -1,10 +1,19 @@
+from typing import Union
+from ..connectionManager import ConnectionManager
 import logging
 
 
 class Graffiti:
     """This class contains the Graffiti controls for the iDotMatrix device."""
 
-    def setPixelColor(self, r, g, b, x, y):
+    logging = logging.getLogger(__name__)
+
+    def __init__(self) -> None:
+        self.conn: ConnectionManager = ConnectionManager()
+
+    async def setPixel(
+        self, r: int, g: int, b: int, x: int, y: int
+    ) -> Union[bool, bytearray]:
         """Set the scoreboard of the device.
 
         Args:
@@ -15,24 +24,52 @@ class Graffiti:
             y (int): pixel y position
 
         Returns:
-            _type_: byte array of the command which needs to be sent to the device
+            Union[bool, bytearray]: False if there's an error, otherwise byte array of the command which needs to be sent to the device.
         """
         try:
-            return bytearray(
+            if r not in range(0, 256):
+                self.logging.error(
+                    "Graffiti.setPixel expects parameter r to be between 0 and 255"
+                )
+                return False
+            if g not in range(0, 256):
+                self.logging.error(
+                    "Graffiti.setPixel expects parameter g to be between 0 and 255"
+                )
+                return False
+            if b not in range(0, 256):
+                self.logging.error(
+                    "Graffiti.setPixel expects parameter b to be between 0 and 255"
+                )
+                return False
+            if x not in range(0, 256):
+                self.logging.error(
+                    "Graffiti.setPixel expects parameter x to be between 0 and 255"
+                )
+                return False
+            if y not in range(0, 256):
+                self.logging.error(
+                    "Graffiti.setPixel expects parameter y to be between 0 and 255"
+                )
+                return False
+            data = bytearray(
                 [
-                    ###START COMMAND####
                     10,
                     0,
                     5,
                     1,
                     0,
-                    ###END COMMAND####
-                    r,  ###COLOR R
-                    g,  ###COLOR G
-                    b,  ###COLOR B
-                    x,  ###PIXEL X
-                    y,  ###PIXEL Y
+                    r % 256,  # Ensure R, G, B, X, Y are within byte range
+                    g % 256,
+                    b % 256,
+                    x % 256,
+                    y % 256,
                 ]
             )
+            if self.conn:
+                await self.conn.connect()
+                await self.conn.send(data=data)
+            return data
         except BaseException as error:
-            logging.error("could not update the Graffiti Board: {}".format(error))
+            self.logging.error(f"could not update the Graffiti Board: {error}")
+            return False

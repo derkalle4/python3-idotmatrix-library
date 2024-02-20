@@ -1,195 +1,246 @@
+from ..connectionManager import ConnectionManager
 from datetime import datetime
 import logging
+from typing import Optional, Union
 
 
 class Common:
-    """This class contains generic bluetooth functions for the iDotMatrix.
+    """This class contains generic Bluetooth functions for the iDotMatrix.
     Based on the BleProtocolN.java file of the iDotMatrix Android App.
     """
 
-    def toggle_screen_freeze(self) -> bytearray:
+    logging = logging.getLogger(__name__)
+
+    def __init__(self) -> None:
+        self.conn: ConnectionManager = ConnectionManager()
+
+    async def freezeScreen(self) -> bytearray:
         """Freezes or unfreezes the screen.
 
         Returns:
-            byte array of the command which needs to be sent to the device
+            bytearray: Command to be sent to the device.
         """
-        return bytearray(
+        data = bytearray(
             [
-                4, 
-                0, 
-                3, 
-                0
+                4,
+                0,
+                3,
+                0,
             ]
         )
+        if self.conn:
+            await self.conn.connect()
+            await self.conn.send(data=data)
+        return data
 
-    def turn_screen_off(self) -> bytearray:
+    async def screenOff(self) -> bytearray:
         """Turns the screen off.
 
         Returns:
-            byte array of the command which needs to be sent to the device
+            bytearray: Command to be sent to the device.
         """
-        return bytearray(
+        data = bytearray(
             [
-                5, 
-                0, 
-                7, 
+                5,
+                0,
+                7,
                 1,
                 0,
             ]
         )
+        if self.conn:
+            await self.conn.connect()
+            await self.conn.send(data=data)
+        return data
 
-    def turn_screen_on(self) -> bytearray:
+    async def screenOn(self) -> bytearray:
         """Turns the screen on.
 
         Returns:
-            byte array of the command which needs to be sent to the device
+            bytearray: Command to be sent to the device.
         """
-        return bytearray(
+        data = bytearray(
             [
-                5, 
-                0, 
-                7, 
+                5,
+                0,
+                7,
                 1,
                 1,
             ]
         )
+        if self.conn:
+            await self.conn.connect()
+            await self.conn.send(data=data)
+        return data
 
-    def flip_screen(self, flip: bool = True) -> bytearray | None:
-        """rotates the screen 180 dregrees
+    async def flipScreen(self, flip: bool = True) -> Union[bool, bytearray]:
+        """Rotates the screen 180 degrees.
 
         Args:
-            flip (bool): False = normal, True = rotated. Defaults to False.
+            flip (bool): False = normal, True = rotated. Defaults to True.
+
         Returns:
-            byte array of the command which needs to be sent to the device
+            Union[bool, bytearray]: False if input validation fails, otherwise byte array of the command which needs to be sent to the device.
         """
         try:
-            return bytearray(
+            data = bytearray(
                 [
                     5,
                     0,
                     6,
                     128,
-                    flip % 256,
+                    1 if flip else 0,
                 ]
             )
-        except BaseException as error:
-            logging.error(f"could not rotate the screen of the device: {error}")
+            if self.conn:
+                await self.conn.connect()
+                await self.conn.send(data=data)
+            return data
+        except Exception as error:
+            self.logging.error(f"Could not rotate the screen of the device: {error}")
+            return False
 
-    def set_screen_brightness(self, brightness_percent: int) -> bytearray | None:
-        """Set screen brightness. Range 5-100 (%)
+    async def setBrightness(self, brightness_percent: int) -> Union[bool, bytearray]:
+        """Set screen brightness. Range 5-100 (%).
 
         Args:
-            brightness_percent (int): set the brightness in percent
+            brightness_percent (int): Set the brightness in percent.
 
         Returns:
-            byte array of the command which needs to be sent to the device
+            Union[bool, bytearray]: False if input validation fails, otherwise byte array of the command which needs to be sent to the device.
         """
         try:
-            return bytearray(
+            if brightness_percent not in range(5, 101):
+                self.logging.error(
+                    "Common.setBrightness parameter brightness_percent is not in range between 5 and 100"
+                )
+                return False
+            data = bytearray(
                 [
                     5,
                     0,
                     4,
                     128,
-                    brightness_percent % 256,
+                    brightness_percent,
                 ]
             )
-        except BaseException as error:
-            logging.error(f"could not set the brightness of the screen: {error}")
-        
-    def set_speed(self, speed: int) -> bytearray | None:
+            if self.conn:
+                await self.conn.connect()
+                await self.conn.send(data=data)
+            return data
+        except Exception as error:
+            self.logging.error(f"Could not set the brightness of the screen: {error}")
+            return False
+
+    async def setSpeed(self, speed: int) -> Union[bool, bytearray]:
         """Sets the speed of ? - not referenced anywhere in the iDotMatrix Android App.
 
         Args:
-            speed (int): set the speed
+            speed (int): Set the speed.
 
         Returns:
-            byte array of the command which needs to be sent to the device
+            Union[bool, bytearray]: False if input validation fails, otherwise byte array of the command which needs to be sent to the device.
         """
         try:
-            return bytearray(
+            data = bytearray(
                 [
                     5,
                     0,
                     3,
                     1,
-                    speed % 256,
+                    speed,
                 ]
             )
-        except BaseException as error:
-            logging.error(f"could not change the speed of the device: {error}")
+            if self.conn:
+                await self.conn.connect()
+                await self.conn.send(data=data)
+            return data
+        except Exception as error:
+            self.logging.error(f"Could not change the speed of the device: {error}")
+            return False
 
-    def set_time(self, year: int, month: int, day: int, hour: int, minute: int, second: int) -> bytearray | None:
+    async def setTime(
+        self, year: int, month: int, day: int, hour: int, minute: int, second: int
+    ) -> Optional[bytearray]:
         """Sets the date and time of the device.
 
         Args:
-            year (int): year (4 digits)
-            month (int): month
-            day (int): day
-            hour (int): hour
-            minute (int): minute
-            second (int): second
+            year (int): Year (4 digits).
+            month (int): Month.
+            day (int): Day.
+            hour (int): Hour.
+            minute (int): Minute.
+            second (int): Second.
 
         Returns:
-            byte array of the command which needs to be sent to the device
+            Optional[bytearray]: Command to be sent to the device or None if error.
         """
         try:
-            date = datetime(year, month, day, hour, minute, second)
-            return bytearray(
+            data = bytearray(
                 [
                     11,
                     0,
                     1,
                     128,
-                    year % 256,
-                    month % 256,
-                    day % 256,
-                    (date.weekday() + 1) % 256,
-                    hour % 256,
-                    minute % 256,
-                    second % 256,
+                    year % 100,
+                    month,
+                    day,
+                    datetime(year, month, day).weekday() + 1,
+                    hour,
+                    minute,
+                    second,
                 ]
             )
-        except BaseException as error:
-            logging.error(f"could not set the time of the device: {error}")
+            if self.conn:
+                await self.conn.connect()
+                await self.conn.send(data=data)
+            return data
+        except Exception as error:
+            self.logging.error(f"Could not set the time of the device: {error}")
+            return False
 
-    def set_joint(self, mode: int) -> bytearray | None:
+    async def setJoint(self, mode: int) -> Union[bool, bytearray]:
         """Currently no idea what this is doing.
 
         Args:
-            mode (int): set the joint mode
+            mode (int): Set the joint mode.
 
         Returns:
-            byte array of the command which needs to be sent to the device
+            Union[bool, bytearray]: False if input validation fails, otherwise byte array of the command which needs to be sent to the device.
         """
         try:
-            return bytearray(
+            data = bytearray(
                 [
                     5,
                     0,
                     12,
                     128,
-                    mode % 256,
+                    mode,
                 ]
             )
-        except BaseException as error:
-            logging.error(f"could not change the device joint: {error}")
-            
-    def set_password(self, password: int) -> bytearray | None:
-        """Setting password: 6 digits in range 000000..999999. Reset device to clear
+            if self.conn:
+                await self.conn.connect()
+                await self.conn.send(data=data)
+            return data
+        except Exception as error:
+            self.logging.error(f"Could not change the device joint: {error}")
+            return False
+
+    async def setPassword(self, password: int) -> Union[bool, bytearray]:
+        """Setting password: 6 digits in range 000000..999999. Reset device to clear.
 
         Args:
-            password (int): password
+            password (int): Password.
+
         Returns:
-            byte array of the command which needs to be sent to the device
+            Union[bool, bytearray]: False if input validation fails, otherwise byte array of the command which needs to be sent to the device.
         """
-        
-        pwd_high = password // 10000
-        pwd_mid = password % 10000 // 100
-        pwd_low = password % 100
-        
+
         try:
-            return bytearray(
+            pwd_high = (password // 10000) % 256
+            pwd_mid = (password // 100) % 100 % 256
+            pwd_low = password % 100 % 256
+            data = bytearray(
                 [
                     8,
                     0,
@@ -201,6 +252,10 @@ class Common:
                     pwd_low,
                 ]
             )
-        except BaseException as error:
-            logging.error(f"could not set the password: {error}")
-
+            if self.conn:
+                await self.conn.connect()
+                await self.conn.send(data=data)
+            return data
+        except Exception as error:
+            self.logging.error(f"Could not set the password: {error}")
+            return False

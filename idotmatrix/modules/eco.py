@@ -1,4 +1,6 @@
+from ..connectionManager import ConnectionManager
 import logging
+from typing import Union
 
 
 class Eco:
@@ -7,7 +9,20 @@ class Eco:
     Based on the BleProtocolN.java file of the iDotMatrix Android App.
     """
 
-    def setEcoMode(self, flag, start_hour, start_minute, end_hour, end_minute, light):
+    logging = logging.getLogger(__name__)
+
+    def __init__(self) -> None:
+        self.conn: ConnectionManager = ConnectionManager()
+
+    async def setMode(
+        self,
+        flag: int,
+        start_hour: int,
+        start_minute: int,
+        end_hour: int,
+        end_minute: int,
+        light: int,
+    ) -> Union[bool, bytearray]:
         """Sets the eco mode of the device (e.g. turning on or off the device, set the color, ....)
 
         Args:
@@ -19,11 +34,11 @@ class Eco:
             light (int): the brightness of the screen
 
         Returns:
-            _type_: byte array of the command which needs to be sent to the device
+            Union[bool, bytearray]: False if input validation fails, otherwise byte array of the command which needs to be sent to the device.
         """
-        # new byte[]{10, 0, 2, ByteCompanionObject.MIN_VALUE, (byte) i, (byte) i2, (byte) i3, (byte) i4, (byte) i5, (byte) i6}
         try:
-            return bytearray(
+            # TODO check parameters for their valid values and discard everything else
+            data = bytearray(
                 [
                     10,
                     0,
@@ -37,5 +52,10 @@ class Eco:
                     int(light) % 256,
                 ]
             )
+            if self.conn:
+                await self.conn.connect()
+                await self.conn.send(data=data)
+            return data
         except BaseException as error:
-            logging.error("could not set the eco mode: {}".format(error))
+            self.logging.error(f"could not set the eco mode: {error}")
+            return False

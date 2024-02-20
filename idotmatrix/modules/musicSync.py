@@ -1,74 +1,112 @@
+from typing import Union
+from ..connectionManager import ConnectionManager
 import logging
 
 
 class MusicSync:
-    def setMicType(self, type):
+    logging = logging.getLogger(__name__)
+
+    def __init__(self) -> None:
+        self.conn: ConnectionManager = ConnectionManager()
+
+    async def setMicType(self, type: int) -> Union[bool, bytearray]:
         """Set the microphone type. Not referenced anywhere in the iDotMatrix Android App. So not used atm.
 
         Args:
             type (int): type of the Microphone. Unknown what values can be used.
 
         Returns:
-            _type_: byte array of the command which needs to be sent to the device
+            Union[bool, bytearray]: False if there's an error, otherwise byte array of the command which needs to be sent to the device.
         """
         try:
-            return bytearray(
+            data = bytearray(
                 [
                     6,
                     0,
                     11,
                     128,
-                    int(type) % 256,
+                    type % 256,
                 ]
             )
+            if self.conn:
+                await self.conn.connect()
+                await self.conn.send(data=data)
+            return data
         except BaseException as error:
-            logging.error("could not set the microphone type: {}".format(error))
+            self.logging.error(f"could not set the microphone type: {error}")
+            return False
 
-    def sendImageRythm(self, value1):
-        """Set the image rythm. Not referenced anywhere in the iDotMatrix Android App. When used (tested with values up to 10)
-            it displays a stick figure which dances if the value1 gets changed often enough to a different one.
+    async def sendImageRythm(self, value1: int) -> Union[bool, bytearray]:
+        """Set the image rhythm. Not referenced anywhere in the iDotMatrix Android App. When used (tested with values up to 10)
+        it displays a stick figure which dances if the value1 gets changed often enough to a different one.
 
         Args:
-            value1 (int): type of the rythm? Unknown what values can be used.
+            value1 (int): type of the rhythm? Unknown what values can be used.
 
         Returns:
-            _type_: byte array of the command which needs to be sent to the device
+            Union[bool, bytearray]: False if there's an error, otherwise byte array of the command which needs to be sent to the device.
         """
         try:
-            return bytearray(
+            data = bytearray(
                 [
                     6,
                     0,
                     0,
                     2,
-                    int(value1) % 256,
+                    value1 % 256,
                     1,
                 ]
             )
+            if self.conn:
+                await self.conn.connect()
+                await self.conn.send(data=data)
+            return data
         except BaseException as error:
-            logging.error("could not set the image rythm: {}".format(error))
+            self.logging.error(f"could not set the image rhythm: {error}")
+            return False
 
-    def sendRhythm(self, mode, byteArray):
+    async def sendRhythm(
+        self, mode: int, byteArray: bytearray
+    ) -> Union[bool, bytearray]:
         """Used to send synchronized Microphone sound data to the device and visualizing it. Is handled in MicrophoneActivity.java of the
-            iDotMatrix Android App. Will not be implemented here because I have no plans to support the computer microphone. The device
-            has an integrated microphone which is able to react to sound.
+        iDotMatrix Android App. Will not be implemented here because there are no plans to support the computer microphone. The device
+        has an integrated microphone which is able to react to sound.
 
         Args:
-            mode (int): mode of the rythm.
-            byteArray (byteArray): actual microphone sound data for the visualization.
+            mode (int): mode of the rhythm.
+            byteArray (bytearray): actual microphone sound data for the visualization.
 
         Returns:
-            _type_: byte array of the command which needs to be sent to the device
+            Union[bool, bytearray]: The original byte array or False if there's an error.
         """
         try:
-            return byteArray
+            # Assuming `mode` is intended to be used in future or within `byteArray` preparation.
+            data = byteArray
+            if self.conn:
+                await self.conn.connect()
+                await self.conn.send(data=data)
+            return data
         except BaseException as error:
-            logging.error("could not set the rythm: {}".format(error))
+            self.logging.error(f"could not set the rhythm: {error}")
+            return False
 
-    def stopRythm(self):
-        """Stops the Microhpone Rythm on the iDotMatrix device.
+    async def stopRythm(self) -> bytearray:
+        """Stops the Microphone Rhythm on the iDotMatrix device.
 
         Returns:
-            _type_: byte array of the command which needs to be sent to the device
+            bytearray: Byte array of the command which needs to be sent to the device.
         """
-        return bytearray([6, 0, 0, 2, 0, 0])
+        data = bytearray(
+            [
+                6,
+                0,
+                0,
+                2,
+                0,
+                0,
+            ]
+        )
+        if self.conn:
+            await self.conn.connect()
+            await self.conn.send(data=data)
+        return data
