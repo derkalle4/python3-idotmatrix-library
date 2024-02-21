@@ -4,7 +4,7 @@ setup(
     name="idotmatrix",
     version="0.0.1",
     description="configure any iDotMatrix compatible 16x16 or 32x32 pixel display without the chinese iDotMatrix android / iOS app.",
-    url="https://github.com/shuds13/pyexample",
+    url="https://github.com/derkalle4/python3-idotmatrix-library",
     author="Kalle Minkner",
     author_email="info@kalleminkner.de",
     license="GPLv3",
