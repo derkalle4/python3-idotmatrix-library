@@ -21,6 +21,7 @@ setup(
         "asyncio",
         "bleak",
         "pillow",
+        "cryptography",
     ],
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
