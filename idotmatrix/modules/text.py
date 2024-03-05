@@ -9,6 +9,11 @@ class Text:
     """Manages text processing and packet creation for iDotMatrix devices. With help from https://github.com/8none1/idotmatrix/ :)"""
 
     logging = logging.getLogger(__name__)
+    # must be 16x32 or 8x16
+    image_width = 16
+    image_height = 32
+    # must be x05 for 16x32 or x02 for 8x16
+    separator = b"\x05\xff\xff\xff"
 
     def __init__(self) -> None:
         self.conn: ConnectionManager = ConnectionManager()
@@ -71,8 +76,7 @@ class Text:
         Returns:
             bytearray: _description_
         """
-        separator = b"\x05\xff\xff\xff"
-        num_chars = text_bitmaps.count(separator)
+        num_chars = text_bitmaps.count(self.separator)
 
         text_metadata = bytearray(
             [
@@ -129,21 +133,21 @@ class Text:
         font = ImageFont.truetype(font_path, font_size)
         byte_stream = bytearray()
         for char in text:
-            # todo make image the correct size for 32x32 and 64x64
-            image = Image.new("1", (16, 32), 0)
+            # todo make image the correct size for 16x16, 32x32 and 64x64
+            image = Image.new("1", (self.image_width, self.image_height), 0)
             draw = ImageDraw.Draw(image)
             _, _, text_width, text_height = draw.textbbox((0, 0), text=char, font=font)
-            text_x = (16 - text_width) // 2
-            text_y = (32 - text_height) // 2
+            text_x = (self.image_width - text_width) // 2
+            text_y = (self.image_height - text_height) // 2
             draw.text((text_x, text_y), char, fill=1, font=font)
             bitmap = bytearray()
-            for y in range(32):
-                for x in range(16):
+            for y in range(self.image_height):
+                for x in range(self.image_width):
                     if x % 8 == 0:
                         byte = 0
                     pixel = image.getpixel((x, y))
                     byte |= (pixel & 1) << (x % 8)
-                    if x % 8 == 7 or x == 15:
+                    if x % 8 == 7 or x == self.image_width - 1:
                         bitmap.append(byte)
-            byte_stream.extend(b"\x05\xff\xff\xff" + bitmap)
+            byte_stream.extend(self.separator + bitmap)
         return byte_stream
