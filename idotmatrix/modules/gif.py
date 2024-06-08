@@ -36,7 +36,7 @@ class Gif:
         """
         return [data[i : i + chunk_size] for i in range(0, len(data), chunk_size)]
 
-    def _createPayloads(self, gif_data: bytearray) -> bytearray:
+    def _createPayloads(self, gif_data: bytearray) -> List[bytearray]:
         """Creates payloads from a GIF file.
 
         Args:
@@ -69,12 +69,12 @@ class Gif:
         header[5:9] = int(len(gif_data) + len(header)).to_bytes(4, byteorder="little")
         header[9:13] = crc.to_bytes(4, byteorder="little")
         gif_chunks = self._splitIntoChunks(gif_data, 4096)
-        payloads = bytearray()
+        payloads = []
         for i, chunk in enumerate(gif_chunks):
             header[4] = 2 if i > 0 else 0
             chunk_len = len(chunk) + len(header)
             header[0:2] = chunk_len.to_bytes(2, byteorder="little")
-            payloads.extend(header + chunk)
+            payloads.append(header + chunk)
         return payloads
 
     async def uploadUnprocessed(self, file_path: str) -> Union[bool, bytearray]:
@@ -91,7 +91,8 @@ class Gif:
             data = self._createPayloads(gif_data)
             if self.conn:
                 await self.conn.connect()
-                await self.conn.send(data=data)
+                for chunk in data:
+                    await self.conn.send(data=chunk)
             return data
         except BaseException as error:
             self.logging.error(f"could not upload gif unprocessed: {error}")
@@ -137,7 +138,8 @@ class Gif:
                 data = self._createPayloads(gif_buffer.getvalue())
                 if self.conn:
                     await self.conn.connect()
-                    await self.conn.send(data=data)
+                    for chunk in data:
+                        await self.conn.send(data=chunk)
                 return data
         except BaseException as error:
             self.logging.error(f"could not upload gif processed: {error}")
