@@ -11,3 +11,4 @@ from .musicSync import MusicSync
 from .scoreboard import Scoreboard
 from .system import System
 from .text import Text
+from .effect import Effect
