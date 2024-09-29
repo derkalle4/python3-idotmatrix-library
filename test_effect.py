@@ -13,17 +13,17 @@ async def main():
     #Effect
     test = Effect()
     for i in range(0, 7):
-        await test.setMode(i, colours[:2]) # this should work
+        await test.setMode(i, colours[:2])
         time.sleep(5)
-        await test.setMode(i, colours[:3]) # this should work
+        await test.setMode(i, colours[:3])
         time.sleep(5)
-        await test.setMode(i, colours[:4]) # this should work
+        await test.setMode(i, colours[:4])
         time.sleep(5)
-        await test.setMode(i, colours[:5]) # this should work
+        await test.setMode(i, colours[:5])
         time.sleep(5)
-        await test.setMode(i, colours[:6]) # this should work
+        await test.setMode(i, colours[:6])
         time.sleep(5)
-        await test.setMode(i, colours[:7]) # this should work
+        await test.setMode(i, colours[:7])
         time.sleep(5)
 
 if __name__ == "__main__":
