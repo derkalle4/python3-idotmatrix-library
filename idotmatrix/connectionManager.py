@@ -70,15 +70,15 @@ class ConnectionManager(metaclass=SingletonMeta):
             await self.client.disconnect()
             self.logging.info(f"disconnected from {self.address}")
 
-    async def send(self, data, mtu_size=509, response=False):
+    async def send(self, data, response=False):
         if self.client and self.client.is_connected:
             self.logging.debug("sending message(s) to device")
-            for i in range(0, len(data), mtu_size):
-                await self.client.write_gatt_char(
-                    UUID_WRITE_DATA,
-                    data[i : i + mtu_size],
-                    response,
-                )
+            await self.client.write_gatt_char(
+                UUID_WRITE_DATA,
+                data,
+                response,
+            )
+            time.sleep(0.01)
             return True
 
     async def read(self) -> bytes:

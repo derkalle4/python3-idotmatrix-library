@@ -64,19 +64,20 @@ class Gif:
                 255,
                 255,
                 255,
+                5,
                 0,
-                0,
-                12,
+                13,
             ]
         )
+        # split gif into chunks
+        chunks = []
+        gif_chunks = self._splitIntoChunks(gif_data, chunk_size)
         # set gif length
         header[5:9] = int(len(gif_data)).to_bytes(4, byteorder="little")
         # set crc of gif
         crc = zlib.crc32(gif_data)
         header[9:13] = crc.to_bytes(4, byteorder="little")
-        # split gif into chunks
-        chunks = []
-        gif_chunks = self._splitIntoChunks(gif_data, chunk_size - len(header))
+        # iterate over chunks
         for i, chunk in enumerate(gif_chunks):
             # starting from the second chunk, set the header to 2
             header[4] = 2 if i > 0 else 0
@@ -102,7 +103,10 @@ class Gif:
             if self.conn:
                 await self.conn.connect()
                 for chunk in data:
-                    await self.conn.send(data=chunk)
+                    await self.conn.send(
+                        data=chunk,
+                        response=True,
+                    )
             return data
         except BaseException as error:
             self.logging.error(f"could not upload gif unprocessed: {error}")
@@ -149,7 +153,7 @@ class Gif:
                 if self.conn:
                     await self.conn.connect()
                     for chunk in data:
-                        await self.conn.send(data=chunk)
+                        await self.conn.send(data=chunk, response=True)
                 return data
         except BaseException as error:
             self.logging.error(f"could not upload gif processed: {error}")
