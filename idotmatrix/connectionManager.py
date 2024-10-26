@@ -16,9 +16,6 @@ class SingletonMeta(type):
                 cls._instances[cls] = instance
             except:
                 # return None if wrong (or no arguments are given)
-                self.logging.info(
-                    "running in bytearray return mode (no or wrong arguments given to ConnectionManager class)"
-                )
                 cls._instances[cls] = None
         return cls._instances[cls]
 
@@ -73,14 +70,15 @@ class ConnectionManager(metaclass=SingletonMeta):
             await self.client.disconnect()
             self.logging.info(f"disconnected from {self.address}")
 
-    async def send(self, data):
+    async def send(self, data, mtu_size=509, response=False):
         if self.client and self.client.is_connected:
             self.logging.debug("sending message(s) to device")
-            await self.client.write_gatt_char(
-                UUID_WRITE_DATA,
-                data,
-            )
-            time.sleep(0.01)
+            for i in range(0, len(data), mtu_size):
+                await self.client.write_gatt_char(
+                    UUID_WRITE_DATA,
+                    data[i : i + mtu_size],
+                    response,
+                )
             return True
 
     async def read(self) -> bytes:

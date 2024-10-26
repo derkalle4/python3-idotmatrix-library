@@ -36,16 +36,19 @@ class Gif:
         """
         return [data[i : i + chunk_size] for i in range(0, len(data), chunk_size)]
 
-    def _createPayloads(self, gif_data: bytearray) -> List[bytearray]:
+    def _createPayloads(
+        self, gif_data: bytearray, chunk_size: int = 4096
+    ) -> List[bytearray]:
         """Creates payloads from a GIF file.
 
         Args:
             gif_data (bytearray): data of the gif file
+            chunk_size (int): size of a chunk
 
         Returns:
             bytearray: returns bytearray payload
         """
-        crc = zlib.crc32(gif_data)
+        # chunk header
         header = bytearray(
             [
                 255,
@@ -61,21 +64,28 @@ class Gif:
                 255,
                 255,
                 255,
-                5,
                 0,
-                13,
+                0,
+                12,
             ]
         )
-        header[5:9] = int(len(gif_data) + len(header)).to_bytes(4, byteorder="little")
+        # set gif length
+        header[5:9] = int(len(gif_data)).to_bytes(4, byteorder="little")
+        # set crc of gif
+        crc = zlib.crc32(gif_data)
         header[9:13] = crc.to_bytes(4, byteorder="little")
-        gif_chunks = self._splitIntoChunks(gif_data, 4096)
-        payloads = []
+        # split gif into chunks
+        chunks = []
+        gif_chunks = self._splitIntoChunks(gif_data, chunk_size - len(header))
         for i, chunk in enumerate(gif_chunks):
+            # starting from the second chunk, set the header to 2
             header[4] = 2 if i > 0 else 0
+            # set chunk length in header
             chunk_len = len(chunk) + len(header)
             header[0:2] = chunk_len.to_bytes(2, byteorder="little")
-            payloads.append(header + chunk)
-        return payloads
+            # append chunk to chunk list
+            chunks.append(header + chunk)
+        return chunks
 
     async def uploadUnprocessed(self, file_path: str) -> Union[bool, bytearray]:
         """uploads an image without further checks and resizes.
