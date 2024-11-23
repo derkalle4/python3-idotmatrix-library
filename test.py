@@ -5,6 +5,7 @@ from idotmatrix import Chronograph
 from idotmatrix import Clock
 from idotmatrix import Common
 from idotmatrix import Countdown
+from idotmatrix import Effect
 
 # from idotmatrix import Eco
 from idotmatrix import FullscreenColor
@@ -73,7 +74,10 @@ async def main():
         font_path="./fonts/Rain-DRM3.otf",
     )
     time.sleep(5)
-
+    # Effect
+    test = Effect()
+    await test.setMode(1, [(255,0,0), (255,162,0), (255,255,0), (0,255,0), (0,0,255), (255,0,255)])
+    time.sleep(5)
 
 if __name__ == "__main__":
     try:

@@ -20,6 +20,7 @@ from .modules.musicSync import MusicSync
 from .modules.scoreboard import Scoreboard
 from .modules.system import System
 from .modules.text import Text
+from .modules.effect import Effect
 
 
 __author__ = "Kalle Minkner, Jon-Mailes Graeffe"
@@ -41,4 +42,5 @@ __all__ = [
     "Scoreboard",
     "System",
     "Text",
+    "Effect",
 ]
