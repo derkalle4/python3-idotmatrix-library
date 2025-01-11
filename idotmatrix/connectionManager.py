@@ -1,7 +1,7 @@
+from asyncio import sleep
 from bleak import BleakClient, BleakScanner, AdvertisementData
 from .const import UUID_READ_DATA, UUID_WRITE_DATA, BLUETOOTH_DEVICE_NAME
 import logging
-import time
 from typing import List, Optional
 
 
@@ -78,7 +78,7 @@ class ConnectionManager(metaclass=SingletonMeta):
                 data,
                 response,
             )
-            time.sleep(0.01)
+            await sleep(0.01)
             return True
 
     async def read(self) -> bytes:
