@@ -1,7 +1,7 @@
 from ..connectionManager import ConnectionManager
 from datetime import datetime
 import logging
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 
 class Common:
@@ -259,3 +259,30 @@ class Common:
         except Exception as error:
             self.logging.error(f"Could not set the password: {error}")
             return False
+
+
+    async def reset(self) -> Union[bool, List[bytearray]]:
+        """Sends a command that resets the device and its internals.
+        Can fix issues that appear over time.
+
+        Note:
+            Credits to 8none1 for finding this method:
+            https://github.com/8none1/idotmatrix/commit/1a08e1e9b82d78427ab1c896c24c2a7fb45bc2f0
+
+        Returns:
+            Union[bool, List[bytearray]]: False if command fails, otherwise list of byte arrays of the commands which needs to be sent to the device.
+        """
+        try:
+            reset_packets = [
+                bytes(bytearray.fromhex("04 00 03 80")),
+                bytes(bytearray.fromhex("05 00 04 80 50")),
+                ]
+            if self.conn:
+                for data in reset_packets:
+                    await self.conn.connect()
+                    await self.conn.send(data=data)
+            return reset_packets
+        except Exception as error:
+            self.logging.error(f"Could not reset the device: {error}")
+            return False
+
