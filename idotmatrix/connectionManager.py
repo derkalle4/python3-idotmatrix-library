@@ -73,11 +73,10 @@ class ConnectionManager(metaclass=SingletonMeta):
     async def send(self, data, response=False):
         if self.client and self.client.is_connected:
             self.logging.debug("sending message(s) to device")
-            await self.client.write_gatt_char(
-                UUID_WRITE_DATA,
-                data,
-                response,
-            )
+            chunk_size = self.client.services.get_characteristic(UUID_WRITE_DATA).max_write_without_response_size
+            for i in range(0, len(data), chunk_size):
+                await self.client.write_gatt_char(UUID_WRITE_DATA,data[i:i+chunk_size], response=response)
+
             time.sleep(0.01)
             return True
 
