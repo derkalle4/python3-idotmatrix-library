@@ -120,7 +120,9 @@ class Image:
                 data = self._createPayloads(png_buffer.getvalue())
                 if self.conn:
                     await self.conn.connect()
-                    await self.conn.send(data=data)
+                    chunks = self._splitIntoChunks(data, 512)
+                    for chunk in chunks:
+                        await self.conn.send(data=chunk)
                 return data
         except BaseException as error:
             self.logging.error(f"could not upload processed image: {error}")
